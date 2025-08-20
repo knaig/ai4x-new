@@ -1,0 +1,25 @@
+apiVersion: serving.kserve.io/v1alpha1
+kind: ServingRuntime
+metadata:
+  name: basic-huggingface-runtime
+  namespace: default
+spec:
+  supportedModelFormats:
+    - name: huggingface
+  containers:
+    - name: huggingface
+      image: kserve/huggingfaceserver:latest
+      ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        - name: grpc
+          containerPort: 8081
+          protocol: TCP
+      resources:
+        limits:
+          cpu: "2"
+          memory: 4Gi
+        requests:
+          cpu: "500m"
+          memory: 1Gi
