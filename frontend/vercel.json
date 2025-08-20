@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "server.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "server.py"
+    }
+  ],
+  "env": {
+    "AI4BHARAT_ENDPOINT": "https://your-kserve-cluster.com",
+    "DEBUG": "false"
+  }
+}

@@ -1,0 +1,31 @@
+apiVersion: serving.kserve.io/v1alpha1
+kind: ServingRuntime
+metadata:
+  name: huggingface-runtime
+spec:
+  supportedModelFormats:
+    - name: huggingface
+      version: "1"
+  containers:
+    - name: huggingface
+      image: kserve/huggingfaceserver:latest
+      ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        - name: grpc
+          containerPort: 8081
+          protocol: TCP
+      env:
+        - name: SAFETENSORS_FAST_GPU
+          value: "1"
+        - name: HF_HUB_DISABLE_TELEMETRY
+          value: "1"
+      resources:
+        limits:
+          cpu: "4"
+          memory: 8Gi
+          nvidia.com/gpu: "1"
+        requests:
+          cpu: "1"
+          memory: 2Gi

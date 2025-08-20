@@ -1,0 +1,32 @@
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  name: ai4bharat-translation
+  namespace: ai4bharat-serving
+  annotations:
+    serving.kserve.io/autoscalerClass: hpa
+    serving.kserve.io/metric: concurrency
+    serving.kserve.io/target: "1"
+spec:
+  predictor:
+    model:
+      modelFormat:
+        name: huggingface
+      name: ai4bharat-translation
+      args:
+        - --model_name=ai4bharat-translation
+        - --model_id=ai4bharat/IndicTrans-v2
+        - --task=translation
+        - --dtype=auto
+      resources:
+        limits:
+          cpu: "2"
+          memory: 4Gi
+        requests:
+          cpu: 500m
+          memory: 2Gi
+      env:
+        - name: SAFETENSORS_FAST_GPU
+          value: "1"
+        - name: HF_HUB_DISABLE_TELEMETRY
+          value: "1"

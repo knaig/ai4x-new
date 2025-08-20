@@ -1,0 +1,23 @@
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  name: test-model
+  namespace: ai4bharat-serving
+spec:
+  predictor:
+    model:
+      modelFormat:
+        name: huggingface
+        version: "1"
+      name: test-model
+      args:
+        - --model_name=test-model
+        - --model_id=bert-base-uncased
+        - --task=text-classification
+      resources:
+        limits:
+          cpu: "1"
+          memory: 2Gi
+        requests:
+          cpu: 200m
+          memory: 1Gi

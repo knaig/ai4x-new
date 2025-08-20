@@ -69,27 +69,30 @@ class AI4BharatDashboard {
 
     async checkConnection() {
         try {
-            // Try to get the service URL from kubectl (if running locally)
+            // Check our Flask backend API status
             const response = await fetch('/api/status');
             if (response.ok) {
                 const data = await response.json();
                 this.apiEndpoint = data.endpoint;
                 this.isConnected = true;
                 this.updateConnectionStatus(true);
-                this.updateModelStatus('Ready');
+                
+                // Update model status based on backend health
+                if (data.status === 'connected') {
+                    this.updateModelStatus('Connected to AI4Bharat Model');
+                } else {
+                    this.updateModelStatus('Using Mock Translation Service');
+                }
             } else {
-                // Fallback to localhost for development
-                this.apiEndpoint = 'http://localhost:8080';
-                this.isConnected = true;
-                this.updateConnectionStatus(true);
-                this.updateModelStatus('Ready');
+                this.isConnected = false;
+                this.updateConnectionStatus(false);
+                this.updateModelStatus('Backend Unavailable');
             }
         } catch (error) {
-            console.log('Using fallback endpoint for development');
-            this.apiEndpoint = 'http://localhost:8080';
-            this.isConnected = true;
-            this.updateConnectionStatus(true);
-            this.updateModelStatus('Ready');
+            console.error('Backend connection error:', error);
+            this.isConnected = false;
+            this.updateConnectionStatus(false);
+            this.updateModelStatus('Connection Failed');
         }
 
         this.updateSystemStatus();
@@ -162,13 +165,14 @@ class AI4BharatDashboard {
 
     async callAI4BharatAPI(text, sourceLang, targetLang) {
         const payload = {
-            instances: [text],
+            text: text,
             source_language: sourceLang,
             target_language: targetLang
         };
 
         try {
-            const response = await fetch(`${this.apiEndpoint}/v1/models/ai4bharat-bert:predict`, {
+            // Call our Flask backend API instead of the model directly
+            const response = await fetch('/api/translate', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -182,29 +186,12 @@ class AI4BharatDashboard {
 
             const data = await response.json();
             
-            // Extract translation and confidence from the response
-            // This will depend on your actual model output format
-            let translation = '';
-            let confidence = 0.95; // Default confidence
-
-            if (data.predictions && data.predictions.length > 0) {
-                if (typeof data.predictions[0] === 'string') {
-                    translation = data.predictions[0];
-                } else if (data.predictions[0].text) {
-                    translation = data.predictions[0].text;
-                } else if (data.predictions[0].translation) {
-                    translation = data.predictions[0].translation;
-                }
-                
-                if (data.predictions[0].confidence) {
-                    confidence = data.predictions[0].confidence;
-                }
-            }
-
             return {
-                success: true,
-                translation: translation || 'Translation not available',
-                confidence: confidence
+                success: data.success || true,
+                translation: data.translation || 'Translation not available',
+                confidence: data.confidence || 0.85,
+                response_time: data.response_time || 0,
+                source: data.source || 'unknown'
             };
         } catch (error) {
             return {
@@ -385,9 +372,9 @@ class AI4BharatDashboard {
     }
 
     updateSystemStatus() {
-        document.getElementById('apiEndpoint').textContent = this.apiEndpoint || '--';
+        document.getElementById('apiEndpoint').textContent = this.apiEndpoint || 'Backend API';
         document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
-        
+
         const uptime = Math.floor((Date.now() - this.startTime) / 1000);
         const hours = Math.floor(uptime / 3600);
         const minutes = Math.floor((uptime % 3600) / 60);

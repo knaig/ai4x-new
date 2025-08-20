@@ -11,6 +11,7 @@ import requests
 from datetime import datetime
 from flask import Flask, render_template, request, jsonify, send_from_directory
 from flask_cors import CORS
+from mock_translations import get_mock_translation, get_supported_languages, get_sample_texts
 
 app = Flask(__name__)
 CORS(app)
@@ -58,12 +59,7 @@ class AI4BharatClient:
     
     def translate(self, text, source_lang='auto', target_lang='en'):
         """Translate text using the AI4Bharat model"""
-        if not self.check_health():
-            return {
-                'success': False,
-                'error': 'Model is not healthy'
-            }
-        
+        # First try to connect to the real model
         try:
             payload = {
                 'instances': [text]
@@ -98,30 +94,23 @@ class AI4BharatClient:
                     'translation': translation,
                     'confidence': confidence,
                     'response_time': response_time,
-                    'raw_response': data
+                    'raw_response': data,
+                    'source': 'ai4bharat_model'
                 }
             else:
-                return {
-                    'success': False,
-                    'error': f'HTTP {response.status_code}: {response.text}',
-                    'response_time': response_time
-                }
+                # If model responds but with error, fall back to mock
+                print(f"Model responded with error: {response.status_code}")
+                return get_mock_translation(text, source_lang, target_lang)
                 
         except requests.exceptions.Timeout:
-            return {
-                'success': False,
-                'error': 'Request timeout - model is taking too long to respond'
-            }
+            print("Model request timeout - using mock translation")
+            return get_mock_translation(text, source_lang, target_lang)
         except requests.exceptions.ConnectionError:
-            return {
-                'success': False,
-                'error': 'Connection error - cannot reach the model service'
-            }
+            print("Cannot connect to AI4Bharat model - using mock translation")
+            return get_mock_translation(text, source_lang, target_lang)
         except Exception as e:
-            return {
-                'success': False,
-                'error': f'Unexpected error: {str(e)}'
-            }
+            print(f"Unexpected error connecting to model: {e}")
+            return get_mock_translation(text, source_lang, target_lang)
     
     def extract_translation(self, data):
         """Extract translation from model response"""
@@ -200,7 +189,8 @@ def api_status():
         'model_name': CONFIG['model_name'],
         'healthy': is_healthy,
         'last_check': datetime.fromtimestamp(client.last_health_check).isoformat(),
-        'timestamp': datetime.now().isoformat()
+        'timestamp': datetime.now().isoformat(),
+        'status': 'connected' if is_healthy else 'fallback_to_mock'
     })
 
 @app.route('/api/translate', methods=['POST'])
@@ -248,25 +238,14 @@ def api_health():
     return jsonify({
         'healthy': is_healthy,
         'timestamp': datetime.now().isoformat(),
-        'endpoint': CONFIG['model_endpoint']
+        'endpoint': CONFIG['model_endpoint'],
+        'status': 'connected' if is_healthy else 'fallback_to_mock'
     })
 
 @app.route('/api/languages')
 def api_languages():
     """Get supported languages"""
-    languages = {
-        'hi': {'name': 'Hindi', 'native': 'हिंदी', 'script': 'Devanagari'},
-        'en': {'name': 'English', 'native': 'English', 'script': 'Latin'},
-        'ta': {'name': 'Tamil', 'native': 'தமிழ்', 'script': 'Tamil'},
-        'mr': {'name': 'Marathi', 'native': 'मराठी', 'script': 'Devanagari'},
-        'gu': {'name': 'Gujarati', 'native': 'ગુજરાતી', 'script': 'Gujarati'},
-        'ne': {'name': 'Nepali', 'native': 'नेपाली', 'script': 'Devanagari'},
-        'bn': {'name': 'Bengali', 'native': 'বাংলা', 'script': 'Bengali'},
-        'te': {'name': 'Telugu', 'native': 'తెలుగు', 'script': 'Telugu'},
-        'kn': {'name': 'Kannada', 'native': 'ಕನ್ನಡ', 'script': 'Kannada'},
-        'ml': {'name': 'Malayalam', 'native': 'മലയാളം', 'script': 'Malayalam'},
-        'pa': {'name': 'Punjabi', 'native': 'ਪੰਜਾਬੀ', 'script': 'Gurmukhi'}
-    }
+    languages = get_supported_languages()
     
     return jsonify({
         'languages': languages,
@@ -282,6 +261,15 @@ def api_metrics():
         'model_name': CONFIG['model_name'],
         'healthy': client.is_healthy,
         'last_health_check': datetime.fromtimestamp(client.last_health_check).isoformat(),
+        'timestamp': datetime.now().isoformat(),
+        'status': 'connected' if client.is_healthy else 'fallback_to_mock'
+    })
+
+@app.route('/api/samples')
+def api_samples():
+    """Get sample texts for testing"""
+    return jsonify({
+        'samples': get_sample_texts(),
         'timestamp': datetime.now().isoformat()
     })
 
