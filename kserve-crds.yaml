@@ -1,0 +1,170 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: inferenceservices.serving.kserve.io
+spec:
+  group: serving.kserve.io
+  names:
+    kind: InferenceService
+    listKind: InferenceServiceList
+    plural: inferenceservices
+    singular: inferenceservice
+    shortNames:
+    - isvc
+    - isvcs
+  scope: Namespaced
+  versions:
+  - name: v1beta1
+    served: true
+    storage: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          spec:
+            type: object
+            properties:
+              predictor:
+                type: object
+                properties:
+                  model:
+                    type: object
+                    properties:
+                      modelFormat:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                            enum: [huggingface, tensorflow, pytorch, sklearn, xgboost, onnx, pmml, triton, custom]
+                      args:
+                        type: array
+                        items:
+                          type: string
+                      resources:
+                        type: object
+                        properties:
+                          limits:
+                            type: object
+                            properties:
+                              cpu:
+                                type: string
+                              memory:
+                                type: string
+                              nvidia.com/gpu:
+                                type: string
+                          requests:
+                            type: object
+                            properties:
+                              cpu:
+                                type: string
+                              memory:
+                                type: string
+              transformer:
+                type: object
+                properties:
+                  containers:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        args:
+                          type: array
+                          items:
+                            type: string
+                        image:
+                          type: string
+                        resources:
+                          type: object
+                          properties:
+                            limits:
+                              type: object
+                              properties:
+                                cpu:
+                                  type: string
+                                memory:
+                                  type: string
+                            requests:
+                              type: object
+                              properties:
+                                cpu:
+                                  type: string
+                                memory:
+                                  type: string
+    subresources:
+      status: {}
+    additionalPrinterColumns:
+    - name: URL
+      type: string
+      jsonPath: .status.url
+    - name: Ready
+      type: string
+      jsonPath: .status.conditions[?(@.type=="Ready")].status
+    - name: LatestReadyRevision
+      type: string
+      jsonPath: .status.latestReadyRevisionName
+    - name: LatestCreatedRevision
+      type: string
+      jsonPath: .status.latestCreatedRevisionName
+    - name: Age
+      type: date
+      jsonPath: .metadata.creationTimestamp
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: servingruntimes.serving.kserve.io
+spec:
+  group: serving.kserve.io
+  names:
+    kind: ServingRuntime
+    listKind: ServingRuntimeList
+    plural: servingruntimes
+    singular: servingruntime
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          spec:
+            type: object
+            properties:
+              supportedModelFormats:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                      enum: [huggingface, tensorflow, pytorch, sklearn, xgboost, onnx, pmml, triton, custom]
+              containers:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    image:
+                      type: string
+                    name:
+                      type: string
+                    resources:
+                      type: object
+                      properties:
+                        limits:
+                          type: object
+                          properties:
+                            cpu:
+                              type: string
+                            memory:
+                              type: string
+                            nvidia.com/gpu:
+                              type: string
+                        requests:
+                          type: object
+                          properties:
+                            cpu:
+                              type: string
+                            memory:
+                              type: string

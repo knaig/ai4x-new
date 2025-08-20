@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI4Bharat Translation & Monitoring Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="styles.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container-fluid">
+        <!-- Header -->
+        <header class="bg-primary text-white py-3 mb-4">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h1><i class="fas fa-language me-2"></i>AI4Bharat Translation Dashboard</h1>
+                    <p class="mb-0">Multilingual AI Model Serving with Real-time Monitoring</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <div class="status-indicator">
+                        <span id="connectionStatus" class="badge bg-success">Connected</span>
+                        <span id="modelStatus" class="badge bg-warning">Loading</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="row">
+            <!-- Translation Panel -->
+            <div class="col-lg-8">
+                <div class="card mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h4><i class="fas fa-exchange-alt me-2"></i>Translation Interface</h4>
+                    </div>
+                    <div class="card-body">
+                        <!-- Language Selection -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="sourceLanguage" class="form-label">Source Language</label>
+                                <select class="form-select" id="sourceLanguage">
+                                    <option value="auto">Auto Detect</option>
+                                    <option value="hi">Hindi (हिंदी)</option>
+                                    <option value="en">English</option>
+                                    <option value="ta">Tamil (தமிழ்)</option>
+                                    <option value="mr">Marathi (मराठी)</option>
+                                    <option value="gu">Gujarati (ગુજરાતી)</option>
+                                    <option value="ne">Nepali (नेपाली)</option>
+                                    <option value="bn">Bengali (বাংলা)</option>
+                                    <option value="te">Telugu (తెలుగు)</option>
+                                    <option value="kn">Kannada (ಕನ್ನಡ)</option>
+                                    <option value="ml">Malayalam (മലയാളം)</option>
+                                    <option value="pa">Punjabi (ਪੰਜਾਬੀ)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="targetLanguage" class="form-label">Target Language</label>
+                                <select class="form-select" id="targetLanguage">
+                                    <option value="en">English</option>
+                                    <option value="hi">Hindi (हिंदी)</option>
+                                    <option value="ta">Tamil (தமிழ்)</option>
+                                    <option value="mr">Marathi (मराठी)</option>
+                                    <option value="gu">Gujarati (ગુજરાતી)</option>
+                                    <option value="ne">Nepali (नेपाली)</option>
+                                    <option value="bn">Bengali (বাংলা)</option>
+                                    <option value="te">Telugu (తెలుగు)</option>
+                                    <option value="kn">Kannada (ಕನ್ನಡ)</option>
+                                    <option value="ml">Malayalam (മലയാളം)</option>
+                                    <option value="pa">Punjabi (ਪੰਜਾਬੀ)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Text Input -->
+                        <div class="mb-3">
+                            <label for="sourceText" class="form-label">Source Text</label>
+                            <textarea class="form-control" id="sourceText" rows="4" 
+                                placeholder="Enter text to translate..."></textarea>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="mb-3">
+                            <button class="btn btn-primary me-2" id="translateBtn">
+                                <i class="fas fa-language me-1"></i>Translate
+                            </button>
+                            <button class="btn btn-secondary me-2" id="clearBtn">
+                                <i class="fas fa-eraser me-1"></i>Clear
+                            </button>
+                            <button class="btn btn-success me-2" id="swapBtn">
+                                <i class="fas fa-exchange-alt me-1"></i>Swap Languages
+                            </button>
+                            <button class="btn btn-info" id="sampleBtn">
+                                <i class="fas fa-lightbulb me-1"></i>Sample Texts
+                            </button>
+                        </div>
+
+                        <!-- Translation Result -->
+                        <div class="mb-3">
+                            <label for="targetText" class="form-label">Translation Result</label>
+                            <textarea class="form-control" id="targetText" rows="4" readonly></textarea>
+                        </div>
+
+                        <!-- Confidence Score -->
+                        <div class="mb-3">
+                            <label class="form-label">Confidence Score</label>
+                            <div class="progress">
+                                <div id="confidenceBar" class="progress-bar" role="progressbar" style="width: 0%">0%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Translations -->
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h5><i class="fas fa-history me-2"></i>Recent Translations</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="translationHistory" class="translation-history">
+                            <!-- Translation history will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Monitoring Panel -->
+            <div class="col-lg-4">
+                <!-- Performance Metrics -->
+                <div class="card mb-4">
+                    <div class="card-header bg-warning text-dark">
+                        <h5><i class="fas fa-tachometer-alt me-2"></i>Performance Metrics</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="metric-item">
+                            <span class="metric-label">Response Time:</span>
+                            <span id="responseTime" class="metric-value">--</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Requests/Min:</span>
+                            <span id="requestsPerMin" class="metric-value">0</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Success Rate:</span>
+                            <span id="successRate" class="metric-value">100%</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Total Requests:</span>
+                            <span id="totalRequests" class="metric-value">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Response Time Chart -->
+                <div class="card mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h5><i class="fas fa-chart-line me-2"></i>Response Time Trend</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="responseTimeChart" width="300" height="200"></canvas>
+                    </div>
+                </div>
+
+                <!-- Language Distribution -->
+                <div class="card mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h5><i class="fas fa-chart-pie me-2"></i>Language Distribution</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="languageChart" width="300" height="200"></canvas>
+                    </div>
+                </div>
+
+                <!-- System Status -->
+                <div class="card">
+                    <div class="card-header bg-dark text-white">
+                        <h5><i class="fas fa-server me-2"></i>System Status</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="status-item">
+                            <span class="status-label">Model Status:</span>
+                            <span id="modelStatusBadge" class="badge bg-warning">Loading</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">API Endpoint:</span>
+                            <span id="apiEndpoint" class="status-value">--</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Last Update:</span>
+                            <span id="lastUpdate" class="status-value">--</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Uptime:</span>
+                            <span id="uptime" class="status-value">--</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Logs -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-secondary text-white">
+                        <h5><i class="fas fa-terminal me-2"></i>API Call Logs</h5>
+                        <button class="btn btn-sm btn-outline-light float-end" id="clearLogsBtn">
+                            <i class="fas fa-trash me-1"></i>Clear Logs
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="apiLogs" class="api-logs">
+                            <!-- API logs will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sample Texts Modal -->
+    <div class="modal fade" id="sampleModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Sample Texts for Testing</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Greetings</h6>
+                            <div class="sample-text" data-text="नमस्ते, कैसे हो आप?">नमस्ते, कैसे हो आप?</div>
+                            <div class="sample-text" data-text="வணக்கம், எப்படி இருக்கிறீர்கள்?">வணக்கம், எப்படி இருக்கிறீர்கள்?</div>
+                            <div class="sample-text" data-text="नमस्कार, तुम्ही कसे आहात?">नमस्कार, तुम्ही कसे आहात?</div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Common Phrases</h6>
+                            <div class="sample-text" data-text="धन्यवाद, आपका दिन शुभ हो">धन्यवाद, आपका दिन शुभ हो</div>
+                            <div class="sample-text" data-text="கடவுள் உங்களை காப்பாற்றட்டும்">கடவுள் உங்களை காப்பாற்றட்டும்</div>
+                            <div class="sample-text" data-text="शुभ रात्रि, मीठे सपने">शुभ रात्रि, मीठे सपने</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

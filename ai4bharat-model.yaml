@@ -1,0 +1,48 @@
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  name: ai4bharat-bert
+  namespace: ai4bharat-serving
+  annotations:
+    serving.kserve.io/autoscalerClass: hpa
+    serving.kserve.io/metric: concurrency
+    serving.kserve.io/target: "1"
+spec:
+  predictor:
+    model:
+      modelFormat:
+        name: huggingface
+      args:
+      - --model_name=ai4bharat-bert
+      - --model_id=ai4bharat/indic-bert
+      - --task=text-classification
+      - --dtype=auto
+      resources:
+        limits:
+          cpu: "2"
+          memory: 4Gi
+          nvidia.com/gpu: "1"
+        requests:
+          cpu: 500m
+          memory: 2Gi
+  transformer:
+    containers:
+    - name: kserve-container
+      image: kserve/huggingfaceserver:latest
+      args:
+      - --model_name=ai4bharat-bert
+      - --model_id=ai4bharat/indic-bert
+      - --task=text-classification
+      - --dtype=auto
+      resources:
+        limits:
+          cpu: "1"
+          memory: 2Gi
+        requests:
+          cpu: 200m
+          memory: 1Gi
+      env:
+      - name: SAFETENSORS_FAST_GPU
+        value: "1"
+      - name: HF_HUB_DISABLE_TELEMETRY
+        value: "1"
