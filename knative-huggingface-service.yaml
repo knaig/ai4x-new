@@ -1,0 +1,33 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: huggingface-test
+  namespace: ai4bharat-serving
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: "1"
+        autoscaling.knative.dev/maxScale: "3"
+    spec:
+      containers:
+      - image: kserve/huggingfaceserver:latest
+        name: huggingface
+        ports:
+        - containerPort: 8080
+          name: http1
+          protocol: TCP
+        env:
+        - name: MODEL_NAME
+          value: "huggingface-test"
+        - name: MODEL_ID
+          value: "bert-base-uncased"
+        - name: TASK
+          value: "text-classification"
+        resources:
+          limits:
+            cpu: "2"
+            memory: 4Gi
+          requests:
+            cpu: "500m"
+            memory: 1Gi
